@@ -1,1 +1,328 @@
-# birthday
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Priya 💖</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
+
+        :root {
+            --primary: #ff4ecd;
+            --accent: #7000ff;
+            --glass: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            background: #020205; color: white; overflow: hidden; 
+            height: 100%; width: 100%; font-family: 'Poppins', sans-serif;
+        }
+
+        #bg3d { position: fixed; inset: 0; z-index: -2; }
+
+        .nebula {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(112, 0, 255, 0.12) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(255, 78, 205, 0.12) 0%, transparent 50%);
+        }
+
+        .screen {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px;
+            text-align: center; visibility: hidden; opacity: 0;
+        }
+        .active { visibility: visible; opacity: 1; }
+
+        .glass-card {
+            background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 30px;
+            padding: 30px 20px; width: 90%; max-width: 420px;
+        }
+
+        /* --- QR CODE STYLING --- */
+        .qr-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0 10px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 20px rgba(255, 78, 205, 0.2);
+        }
+        
+        .qr-container img {
+            width: 220px;
+            height: 220px;
+            border-radius: 12px;
+            display: block;
+        }
+
+        /* --- VIDEO STYLING --- */
+        .video-container {
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--primary);
+            margin: 10px 0;
+            background: #000;
+        }
+        
+        video { width: 100%; display: block; }
+
+        /* --- MOBILE ADJUSTMENTS --- */
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem !important; }
+            #bday h1:nth-child(2) { font-size: 2.5rem !important; }
+            .memory-scroll { height: 350px !important; }
+            .memory-card { min-width: 220px !important; height: 320px !important; }
+            .cake-container { transform: scale(0.8); }
+        }
+
+        /* --- CAKE CSS --- */
+        .cake-container {
+            position: relative; height: 200px; width: 200px;
+            display: flex; justify-content: center; align-items: flex-end;
+            margin-bottom: 20px;
+        }
+        .cake { position: relative; width: 140px; }
+        .plate { width: 180px; height: 10px; background: #ccc; border-radius: 10px; position: absolute; bottom: -10px; left: -20px; }
+        .layer { position: absolute; width: 140px; border-radius: 10px 10px 0 0; }
+        .layer-bottom { height: 40px; background: #6d4c41; bottom: 0; }
+        .layer-middle { height: 35px; background: #8d6e63; bottom: 40px; width: 120px; left: 10px; }
+        .layer-top { height: 25px; background: #a1887f; bottom: 75px; width: 100px; left: 20px; }
+        .icing { position: absolute; top: -100px; left: 20px; width: 100px; height: 15px; background: #fce4ec; border-radius: 20px; }
+        .candle { position: absolute; bottom: 100px; left: 65px; width: 8px; height: 30px; background: #ff4ecd; border-radius: 4px; cursor: pointer; }
+        .flame { 
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 12px; height: 20px; background: radial-gradient(#ffff00, #ff6600);
+            border-radius: 50% 50% 20% 20%; box-shadow: 0 0 15px #ff6600;
+            opacity: 0; transition: 0.5s; animation: flicker 0.1s infinite alternate;
+        }
+        @keyframes flicker { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.1); } }
+
+        /* --- GALLERY --- */
+        .memory-scroll {
+            display: flex; align-items: center; overflow-x: auto;
+            width: 100vw; height: 450px; padding: 0 10vw; gap: 20px;
+            scroll-snap-type: x mandatory; scrollbar-width: none; margin: 20px 0;
+        }
+        .memory-scroll::-webkit-scrollbar { display: none; }
+        .memory-card {
+            position: relative; min-width: 260px; height: 380px;
+            border-radius: 25px; overflow: hidden; flex-shrink: 0;
+            scroll-snap-align: center; transition: all 0.6s ease;
+            transform: scale(0.85); opacity: 0.3; filter: blur(4px);
+        }
+        .memory-card.active { transform: scale(1.05); opacity: 1; filter: blur(0px); }
+        .memory-card img { width: 100%; height: 100%; object-fit: cover; }
+        .memory-card .caption {
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85)); opacity: 0;
+            font-size: 0.9rem;
+        }
+        .memory-card.active .caption { opacity: 1; }
+
+        /* --- UI ELEMENTS --- */
+        #game-zone { width: 100%; height: 300px; background: rgba(255,255,255,0.03); border-radius: 20px; position: relative; overflow: hidden; margin: 20px 0; }
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        .gradient-text { background: linear-gradient(45deg, #ff4ecd, #7000ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        button { background: linear-gradient(45deg, var(--primary), var(--accent)); color: white; border: none; padding: 14px 30px; border-radius: 50px; font-weight: 600; cursor: pointer; margin-top: 10px; width: fit-content; }
+        .outline-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 15px; }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg3d"></canvas>
+    <div class="nebula"></div>
+    <div id="loader"><h2 class="gradient-text">FOR PRIYA...</h2></div>
+
+    <audio id="bg-music" loop><source src="assets/vid.mp4" type="audio/mpeg"></audio>
+
+    <div class="screen active" id="welcome">
+        <div class="glass-card">
+            <h1>Hey Priya 💫</h1>
+            <p style="margin: 15px 0; opacity: 0.8; font-size: 0.9rem;">Ready for your birthday universe?</p>
+            <button onclick="navTo('bday')">Begin Journey</button>
+        </div>
+    </div>
+
+    <div class="screen" id="bday">
+        <h1 class="gradient-text">Happy Birthday</h1>
+        <h1 style="font-size: 3.5rem;">Priya 💖</h1>
+        <p id="typing" style="min-height: 60px; margin-top: 10px; font-style: italic; color: #ddd; padding: 0 5%; font-size: 0.95rem;"></p>
+        <button onclick="navTo('cake-screen')" id="next-btn" style="opacity:0">Next Surprise 🎁</button>
+    </div>
+
+    <div class="screen" id="cake-screen">
+        <h2 class="gradient-text">Make a Wish!</h2>
+        <div class="cake-container">
+            <div class="cake">
+                <div class="plate"></div>
+                <div class="layer layer-bottom"></div>
+                <div class="layer layer-middle"></div>
+                <div class="layer layer-top"></div>
+                <div class="icing"></div>
+                <div class="candle" id="main-candle" onclick="lightCandle()">
+                    <div class="flame" id="flame"></div>
+                </div>
+            </div>
+        </div>
+        <p id="wish-hint" style="font-size: 0.85rem; color: #ffbcff;">Tap the candle to light it! 🕯️</p>
+        <button id="wish-btn" onclick="makeWish()" style="display:none;">Blow & Make a Wish! 🌬️</button>
+    </div>
+
+    <div class="screen" id="story">
+        <h2 class="gradient-text">Our Best Moments</h2>
+        <div class="memory-scroll" id="carousel">
+            <div class="memory-card"><img src="assets/img1.jpeg"><div class="caption">The day we laughed non-stop 😂</div></div>
+            <div class="memory-card"><img src="assets/img2.jpg"><div class="caption">Midnight snack runs 🍕</div></div>
+            <div class="memory-card"><img src="assets/img3.jpg"><div class="caption">Unforgettable days 💫</div></div>
+            <div class="memory-card"><img src="assets/img4.jpeg"><div class="caption">Always together ❤️</div></div>
+            <div class="memory-card"><img src="assets/img5.jpeg"><div class="caption">Partners in crime 😈</div></div>
+            <div class="memory-card"><img src="assets/img6.jpeg"><div class="caption">Cherished moments ✨</div></div>
+            <div class="memory-card"><img src="assets/img7.jpeg"><div class="caption">Simply the best 🥂</div></div>
+            <div class="memory-card"><img src="assets/img8.jpg"><div class="caption">Golden hours 🌅</div></div>
+            <div class="memory-card"><img src="assets/img9.jpg"><div class="caption">Bestie vibes only 👯‍♀️</div></div>
+            <div class="memory-card"><img src="assets/img10.jpg"><div class="caption">To many more years! 🎂</div></div>
+        </div>
+        <button onclick="navTo('game')">Let's Play</button>
+    </div>
+
+    <div class="screen" id="game">
+        <h2>Catch the Vibes</h2>
+        <div id="game-zone"></div>
+        <div id="score-val" style="font-size: 2rem; font-weight: bold; color: var(--primary);">0</div>
+        <button onclick="navTo('surprise')" id="game-finish" style="display:none">Open Surprise 🎁</button>
+    </div>
+
+    <div class="screen" id="surprise">
+        <div class="glass-card" style="overflow-y: auto; max-height: 90vh;">
+            <h1 class="gradient-text">The Grand Finale</h1>
+            
+            <div class="qr-container">
+                <img src="assets/qr.png" alt="Special QR Code">
+            </div>
+
+            <div class="video-container">
+                <video controls playsinline>
+                    <source src="assets/vid.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <p style="margin: 10px 0; font-size: 0.9rem;">Scan the code or watch the video for your final gift!</p>
+            
+            <button onclick="confetti({particleCount:150, spread:70})">More Magic ✨</button>
+            <button class="outline-btn" onclick="navTo('welcome')">Start Over 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 3D STARS BACKGROUND ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('bg3d'), alpha: true});
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        const starGeo = new THREE.BufferGeometry();
+        const starPos = new Float32Array(3000 * 3);
+        for(let i=0; i<3000*3; i++) starPos[i] = (Math.random() - 0.5) * 10;
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMesh = new THREE.Points(starGeo, new THREE.PointsMaterial({size: 0.015, color: 0xffffff}));
+        scene.add(starMesh);
+        camera.position.z = 5;
+        function animate() { requestAnimationFrame(animate); starMesh.rotation.y += 0.0005; renderer.render(scene, camera); }
+        animate();
+
+        // --- NAVIGATION & LOGIC ---
+        function navTo(id) {
+            const current = document.querySelector('.screen.active');
+            const next = document.getElementById(id);
+            
+            if(id === 'bday') { 
+                document.getElementById('bg-music').play(); 
+                startTyping(); 
+            }
+
+            gsap.to(current, {opacity: 0, y: -20, duration: 0.5, onComplete: () => {
+                current.classList.remove('active');
+                next.classList.add('active');
+                gsap.fromTo(next, {opacity: 0, y: 20}, {opacity: 1, y: 0, duration: 0.7});
+                if(id === 'story') initCarousel();
+                if(id === 'game') startGame();
+            }});
+        }
+
+        function lightCandle() {
+            document.getElementById('flame').style.opacity = '1';
+            document.getElementById('wish-hint').innerHTML = "It's lit! ✨";
+            gsap.to("#wish-btn", {display: 'block', opacity: 1, y: -10, duration: 0.5});
+            confetti({ particleCount: 30, origin: { y: 0.7 } });
+        }
+
+        function makeWish() {
+            document.getElementById('flame').style.opacity = '0';
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            setTimeout(() => navTo('story'), 1500);
+        }
+
+        function startTyping() {
+            const txt = "Side by side or miles apart, real friends are always close to the heart. Happy Birthday, Priya! ✨";
+            let i = 0;
+            const el = document.getElementById('typing');
+            el.innerHTML = "";
+            const type = () => {
+                if(i < txt.length) { 
+                    el.innerHTML += txt.charAt(i++); 
+                    setTimeout(type, 50); 
+                } else { 
+                    gsap.to("#next-btn", {opacity: 1}); 
+                }
+            };
+            type();
+        }
+
+        function initCarousel() {
+            const obs = new IntersectionObserver((es) => {
+                es.forEach(e => e.target.classList.toggle('active', e.isIntersecting));
+            }, { root: document.getElementById('carousel'), threshold: 0.6 });
+            document.querySelectorAll('.memory-card').forEach(c => obs.observe(c));
+        }
+
+        function startGame() {
+            let score = 0;
+            const zone = document.getElementById('game-zone');
+            const spawn = setInterval(() => {
+                if(!document.getElementById('game').classList.contains('active')) return clearInterval(spawn);
+                const h = document.createElement('div');
+                h.innerHTML = "💖";
+                h.style.cssText = `position:absolute; left:${Math.random()*80}%; top:-50px; font-size:30px; cursor:pointer;`;
+                zone.appendChild(h);
+                gsap.to(h, {top: "350px", duration: 3, ease: "none", onComplete: () => h.remove()});
+                h.onclick = () => {
+                    score++;
+                    document.getElementById('score-val').innerText = score;
+                    if(score >= 10) { 
+                        document.getElementById('game-finish').style.display = 'block'; 
+                        clearInterval(spawn); 
+                    }
+                    h.remove();
+                };
+            }, 800);
+        }
+
+        // Loader removal
+        window.onload = () => setTimeout(() => gsap.to("#loader", {opacity: 0, onComplete: () => document.getElementById('loader').remove()}), 2000);
+    </script>
+</body>
+</html>
