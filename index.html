@@ -79,15 +79,6 @@
         
         video { width: 100%; display: block; }
 
-        /* --- MOBILE ADJUSTMENTS --- */
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem !important; }
-            #bday h1:nth-child(2) { font-size: 2.5rem !important; }
-            .memory-scroll { height: 350px !important; }
-            .memory-card { min-width: 220px !important; height: 320px !important; }
-            .cake-container { transform: scale(0.8); }
-        }
-
         /* --- CAKE CSS --- */
         .cake-container {
             position: relative; height: 200px; width: 200px;
@@ -139,6 +130,14 @@
         button { background: linear-gradient(45deg, var(--primary), var(--accent)); color: white; border: none; padding: 14px 30px; border-radius: 50px; font-weight: 600; cursor: pointer; margin-top: 10px; width: fit-content; }
         .outline-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 15px; }
         #loader { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; justify-content: center; align-items: center; }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem !important; }
+            #bday h1:nth-child(2) { font-size: 2.5rem !important; }
+            .memory-scroll { height: 350px !important; }
+            .memory-card { min-width: 220px !important; height: 320px !important; }
+            .cake-container { transform: scale(0.8); }
+        }
     </style>
 </head>
 <body>
@@ -179,7 +178,7 @@
             </div>
         </div>
         <p id="wish-hint" style="font-size: 0.85rem; color: #ffbcff;">Tap the candle to light it! 🕯️</p>
-        <button id="wish-btn" onclick="makeWish()" style="display:none;">Blow & Make a Wish! 🌬️</button>
+        <button id="wish-btn" onclick="makeWish()" style="display:none; opacity: 0;">Blow & Make a Wish! 🌬️</button>
     </div>
 
     <div class="screen" id="story">
@@ -250,7 +249,7 @@
             const next = document.getElementById(id);
             
             if(id === 'bday') { 
-                document.getElementById('bg-music').play(); 
+                document.getElementById('bg-music').play().catch(e => console.log("Audio play deferred")); 
                 startTyping(); 
             }
 
@@ -306,7 +305,7 @@
                 if(!document.getElementById('game').classList.contains('active')) return clearInterval(spawn);
                 const h = document.createElement('div');
                 h.innerHTML = "💖";
-                h.style.cssText = `position:absolute; left:${Math.random()*80}%; top:-50px; font-size:30px; cursor:pointer;`;
+                h.style.cssText = `position:absolute; left:${Math.random()*80}%; top:-50px; font-size:30px; cursor:pointer; user-select:none;`;
                 zone.appendChild(h);
                 gsap.to(h, {top: "350px", duration: 3, ease: "none", onComplete: () => h.remove()});
                 h.onclick = () => {
@@ -321,8 +320,7 @@
             }, 800);
         }
 
-        // Loader removal
-        window.onload = () => setTimeout(() => gsap.to("#loader", {opacity: 0, onComplete: () => document.getElementById('loader').remove()}), 2000);
+        window.onload = () => setTimeout(() => gsap.to("#loader", {opacity: 0, duration: 1, onComplete: () => document.getElementById('loader').remove()}), 2000);
     </script>
 </body>
 </html>
